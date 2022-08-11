@@ -34,18 +34,18 @@ func AdminHandler(c tele.Context) error {
 }
 
 func MatchMakeHandler(c tele.Context) error {
-	userId := fmt.Sprintf("%d", c.Sender().ID)
-	// TODO Prerequisites should be met and checked before any thing
-	room, err := engin.HandleEnteringPairChat(userId, "boy", "girl")
-	// TODO genderFor should be on user's profile(maybe middleware, genderTo handler should be separate
-	if err != nil {
-		return err
-	}
-	if room == "wait" {
-		err := c.Send("We put you on que")
-		return err
-	} else {
-		//	TODO The logic for actual one-one chatting
-	}
+	//userId := fmt.Sprintf("%d", c.Sender().ID)
+	//// TODO Prerequisites should be met and checked before any thing
+	//room, err := engin.HandleEnteringPairChat(userId, "boy", "girl")
+	//// TODO genderFor should be on user's profile(maybe middleware, genderTo handler should be separate
+	//if err != nil {
+	//	return err
+	//}
+	//if room == "wait" {
+	//	err := c.Send("We put you on que")
+	//	return err
+	//} else {
+	//	//	TODO The logic for actual one-one chatting
+	//}
 	return nil
 }
