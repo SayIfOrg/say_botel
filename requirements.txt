@@ -1,2 +1,5 @@
+pyTelegramBotAPI>=4.7.0,<4.8
 aiohttp
-pyTelegramBotAPI
+grpcio>=1.47,<1.48
+grpcio-tools>=1.47,<1.48
+beautifulsoup4>=4.11,<4.12
