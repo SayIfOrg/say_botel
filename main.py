@@ -1,5 +1,7 @@
 import asyncio
 import sys
+import os
+
 import grpc_gate.server
 from telebot.async_telebot import AsyncTeleBot
 
