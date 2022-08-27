@@ -8,12 +8,14 @@ from . import webpage_pb2_grpc
 
 from main import bot
 from utils.normalize import clean_html
+from db.operations import create
 
 
 class PublishServicer(webpage_pb2_grpc.PublishServicer):
     async def PublishRichText(self, request, context):
         message = clean_html(request.body)
         res = await bot.send_message(chat_id=73789947, text=message, parse_mode="html")
+        await create.publish_record(page_id=request.id, message_id=res.id)
         return webpage_pb2.Result(message="OK")
 
 

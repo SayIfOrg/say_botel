@@ -1,0 +1,7 @@
+$ alembic init -t async alembic
+
+# Generate new migration file
+$ alembic revision --autogenerate -m "the message"
+
+# Apply the migration
+$ alembic upgrade head
