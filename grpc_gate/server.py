@@ -25,7 +25,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
                 [
                     bot.edit_message_text(
                         text=message,
-                        chat_id=73789947,
+                        chat_id=request.chat_id,
                         message_id=i.message_id,
                         parse_mode="html",
                     )
@@ -34,7 +34,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
             )
         if not request.just_edit:
             new_message = await bot.send_message(
-                chat_id=73789947,
+                chat_id=request.chat_id,
                 text=message,
                 parse_mode="html",
                 reply_to_message_id=previous_published_messages[0].message_id

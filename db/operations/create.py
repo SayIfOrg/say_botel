@@ -13,3 +13,12 @@ async def publish_record(page_id, message_id):
                     models.PublishHistory(page_id=page_id, message_id=message_id),
                 ]
             )
+
+
+async def get_page_records(page_id):
+    async with get_session() as session:
+        result = await session.execute(
+            select(models.PublishHistory).filter_by(page_id=page_id)
+        )
+
+        return result.scalars()
