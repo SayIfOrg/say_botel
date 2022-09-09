@@ -1,9 +1,10 @@
-from typing import Counter
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, BigInteger, String, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, BigInteger, String, func, SmallInteger
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
+
 Base = declarative_base()
+
 
 class PublishHistory(Base):
     __tablename__ = "publish_history"
@@ -13,22 +14,22 @@ class PublishHistory(Base):
     message_id = Column(BigInteger)
 
 
-class A(Base):
-    __tablename__ = "a"
+class BlogRegistered(Base):
+    __tablename__ = "blog_registered"
 
     id = Column(Integer, primary_key=True)
-    data = Column(String)
+    chat_id = Column(Integer, ForeignKey("chat.id"))
+    project_oid = Column(Integer)
+    created_by_chat = Column(Integer, ForeignKey("chat.id"))
+    created_by_oid = Column(Integer)
     create_date = Column(DateTime, server_default=func.now())
-    bs = relationship("B")
 
-    # required in order to access columns with server defaults
-    # or SQL expression defaults, subsequent to a flush, without
-    # triggering an expired load
     __mapper_args__ = {"eager_defaults": True}
 
 
-class B(Base):
-    __tablename__ = "b"
-    id = Column(Integer, primary_key=True)
-    a_id = Column(ForeignKey("a.id"))
+class Chat(Base):
+    __tablename__ = "chat"
+
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    type = Column(String)
     data = Column(String)

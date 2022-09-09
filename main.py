@@ -1,9 +1,12 @@
 import asyncio
-import sys
 import os
+import sys
 
-import grpc_gate.server
+import grpc
 from telebot.async_telebot import AsyncTeleBot
+
+from grpc_gate import webpage_pb2, webpage_pb2_grpc
+import grpc_gate.server
 
 
 bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
@@ -13,15 +16,23 @@ if __name__ == "__main__":
         asyncio.run(grpc_gate.server.serve())
     elif sys.argv[1] == "poll":
 
-        @bot.message_handler(commands=["help", "start"])
-        async def send_welcome(message):
-            await bot.reply_to(
-                message,
-                """\
-        Hi there, I am EchoBot.
-        I am here to echo your kind words back to you. Just say anything nice and I'll say the exact same thing to you!\
-        """,
-            )
+        @bot.message_handler(commands=["register_me"])
+        async def register_for_blog(message):
+            register_token = message.text.split(" ")[1]
+            async with grpc.aio.insecure_channel("localhost:5061") as channel:
+                stub = webpage_pb2_grpc.ManageInstanceStub(channel)
+                response = await stub.ValidateToken(
+                    webpage_pb2.Token(token=register_token, commit=False)
+                )
+                if response.name:
+                    response = await stub.ValidateToken(
+                        webpage_pb2.Token(token=register_token, commit=True)
+                    )
+                    await bot.reply_to(
+                        message, "succeeded" if response.name else "Error"
+                    )
+                    return
+                await bot.reply_to(message, "It's not valid")
 
         # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
         @bot.message_handler(func=lambda message: True)

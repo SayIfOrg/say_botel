@@ -44,8 +44,25 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
             final_coroutines.append(
                 create.publish_record(page_id=request.id, message_id=new_message.id)
             )
-        await asyncio.gather(*final_coroutines)
+        g_ress = await asyncio.gather(*final_coroutines, return_exceptions=True)
+        for res in g_ress:
+            if isinstance(res, Exception):
+                print(res)
         return webpage_pb2.Result(message="OK")
+
+
+class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
+    async def InstanceList(self, request, context):
+        instances = list(await create.get_project_instances(request.id))
+        return webpage_pb2.Instances(
+            instances=[
+                {"id": i.id, "title": "title", "type": "type"} for i in instances
+            ]
+        )
+
+    async def InstanceDetail(self, request, context):
+        instance = await create.get_instance(request.id)
+        return webpage_pb2.Instance(id=instance.id, title="title", type="type")
 
 
 async def serve():
@@ -53,6 +70,9 @@ async def serve():
     # server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     server = grpc.aio.server()
     webpage_pb2_grpc.add_PageServicer_to_server(PageServicer(), server)
+    webpage_pb2_grpc.add_ManageInstanceServicer_to_server(
+        ManageInstanceServicer(), server
+    )
     server.add_insecure_port("[::]:5060")
     # server.start()
     await server.start()

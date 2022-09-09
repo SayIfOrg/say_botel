@@ -22,3 +22,18 @@ async def get_page_records(page_id):
         )
 
         return result.scalars()
+
+async def get_project_instances(project_id):
+    async with get_session() as session:
+        result = await session.execute(
+            select(models.BlogRegistered).filter_by(project_oid=project_id)
+        )
+
+        return result.scalars()
+
+
+async def get_instance(id):
+    async with get_session() as session:
+        result = await session.get(models.BlogRegistered, id)
+
+        return result
