@@ -5,6 +5,7 @@ import sys
 import grpc
 from telebot.async_telebot import AsyncTeleBot
 
+from db.operations.create import register_instance
 from grpc_gate import webpage_pb2, webpage_pb2_grpc
 import grpc_gate.server
 
@@ -28,6 +29,8 @@ if __name__ == "__main__":
                     response = await stub.ValidateToken(
                         webpage_pb2.Token(token=register_token, commit=True)
                     )
+                    if response.name:
+                        _ = await register_instance(response.id, 1, message.chat)
                     await bot.reply_to(
                         message, "succeeded" if response.name else "Error"
                     )
