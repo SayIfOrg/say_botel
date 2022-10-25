@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 engine = create_async_engine(
-    "postgresql+asyncpg://postgres:password@127.0.0.1:5432/say_telegram",
+    "postgresql+asyncpg://postgres:password@telegram-db:5432/say_telegram",
     echo=True,
 )
 
