@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -5,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 engine = create_async_engine(
-    "postgresql+asyncpg://postgres:password@telegram-db:5432/say_telegram",
+    os.environ["DB_CONNECTION_URL"],
     echo=True,
 )
 

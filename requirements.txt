@@ -5,4 +5,5 @@ asyncpg>=0.26,<1.0
 beautifulsoup4>=4.11,<4.12
 grpcio>=1.50,<1.51
 grpcio-tools>=1.50,<1.51
+python-dotenv>=1.0,<1.1
 sqlalchemy>=1.4.40,<1.5

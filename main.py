@@ -2,12 +2,15 @@ import asyncio
 import os
 import sys
 
+from dotenv import load_dotenv
 import grpc
 from telebot.async_telebot import AsyncTeleBot
 
-from db.operations.create import register_instance
 from grpc_gate import webpage_pb2, webpage_pb2_grpc
 import grpc_gate.server
+
+load_dotenv(dotenv_path=".env", override=True)
+from db.operations.create import register_instance  # TODO fix architectural problem
 
 
 bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
