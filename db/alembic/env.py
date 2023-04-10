@@ -1,9 +1,6 @@
 import asyncio
-from lib2to3.pgen2.token import BACKQUOTE
-from logging.config import fileConfig
 import os
-from pathlib import Path
-import sys
+from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -12,14 +9,16 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from alembic import context
 
-db_module = folder = Path(__file__).resolve().parents[1]
-sys.path.append(os.path.dirname(db_module))
 from db import models
+import main
 
+main.configure()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+config.set_main_option("sqlalchemy.url", os.environ["DB_CONNECTION_URL"])
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
