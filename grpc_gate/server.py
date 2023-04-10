@@ -1,29 +1,51 @@
 # from concurrent import futures
 import asyncio
 import logging
+from typing import AsyncGenerator, Callable
+
 import grpc
+from sqlalchemy.ext.asyncio import AsyncSession
+from telebot.async_telebot import AsyncTeleBot
 
 from . import webpage_pb2
 from . import webpage_pb2_grpc
 
-from main import bot
 from utils.normalize import clean_html
 from db.operations import create
 
 
+def provide_with_db(func):
+    """Inject AsyncSession to Servicer methods"""
+    # Don't use wraps, changing the func signature
+    async def wrapper(self, request, context):
+        async with self.db_initializer() as db:
+            return await func(self, request, context, db)
+
+    return wrapper
+
+
 class PageServicer(webpage_pb2_grpc.PageServicer):
-    async def PublishSuperPage(self, request, context):
+    def __init__(
+        self,
+        bot: AsyncTeleBot,
+        db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]],
+    ):
+        self.bot = bot
+        self.db_initializer = db_initializer
+
+    @provide_with_db
+    async def PublishSuperPage(self, request, context, db: AsyncSession):
         final_coroutines = []
         message = clean_html(request.body)
         previous_published_messages = []
         if request.edit_originals or request.reference_original:
             previous_published_messages = list(
-                await create.get_page_records(request.id)
+                await create.get_page_records(db, request.id)
             )
         if request.edit_originals:
             final_coroutines.extend(
                 [
-                    bot.edit_message_text(
+                    self.bot.edit_message_text(
                         text=message,
                         chat_id=request.chat_id,
                         message_id=i.message_id,
@@ -33,7 +55,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
                 ]
             )
         if not request.just_edit:
-            new_message = await bot.send_message(
+            new_message = await self.bot.send_message(
                 chat_id=request.chat_id,
                 text=message,
                 parse_mode="html",
@@ -42,7 +64,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
                 else None,
             )
             final_coroutines.append(
-                create.publish_record(page_id=request.id, message_id=new_message.id)
+                create.publish_record(db, page_id=request.id, message_id=new_message.id)
             )
         g_ress = await asyncio.gather(*final_coroutines, return_exceptions=True)
         for res in g_ress:
@@ -52,26 +74,37 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
 
 
 class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
-    async def InstanceList(self, request, context):
-        instances = list(await create.get_project_instances(request.id))
+    def __init__(
+        self, db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]]
+    ):
+        self.db_initializer = db_initializer
+
+    @provide_with_db
+    async def InstanceList(self, request, context, db):
+        instances = list(await create.get_project_instances(db, request.id))
         return webpage_pb2.Instances(
             instances=[
                 {"id": i.id, "title": "title", "type": "type"} for i in instances
             ]
         )
 
-    async def InstanceDetail(self, request, context):
-        instance = await create.get_instance(request.id)
+    @provide_with_db
+    async def InstanceDetail(self, request, context, db):
+        instance = await create.get_instance(db, request.id)
         return webpage_pb2.Instance(id=instance.id, title="title", type="type")
 
 
-async def serve():
+async def serve(
+    db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]], bot: AsyncTeleBot
+):
     logging.basicConfig()
     # server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     server = grpc.aio.server()
-    webpage_pb2_grpc.add_PageServicer_to_server(PageServicer(), server)
+    webpage_pb2_grpc.add_PageServicer_to_server(
+        PageServicer(db_initializer=db_initializer, bot=bot), server
+    )
     webpage_pb2_grpc.add_ManageInstanceServicer_to_server(
-        ManageInstanceServicer(), server
+        ManageInstanceServicer(db_initializer=db_initializer), server
     )
     server.add_insecure_port("[::]:5060")
     # server.start()

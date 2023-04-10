@@ -3,46 +3,29 @@ import os
 import sys
 
 from dotenv import load_dotenv
-import grpc
 from telebot.async_telebot import AsyncTeleBot
 
-from grpc_gate import webpage_pb2, webpage_pb2_grpc
 import grpc_gate.server
 
-load_dotenv(dotenv_path=".env", override=True)
-from db.operations.create import register_instance  # TODO fix architectural problem
+
+def configure():
+    load_dotenv(dotenv_path=".env", override=True)
 
 
-bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
 if __name__ == "__main__":
+    configure()
+    import handlers
+    from db.engine import get_session
+
+    bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
+
     if sys.argv[1] == "grpc":
         # grpc_gate.server.serve()
-        asyncio.run(grpc_gate.server.serve())
+        asyncio.run(grpc_gate.server.serve(db_initializer=get_session, bot=bot))
     elif sys.argv[1] == "poll":
-
-        @bot.message_handler(commands=["register_me"])
-        async def register_for_blog(message):
-            register_token = message.text.split(" ")[1]
-            async with grpc.aio.insecure_channel("localhost:5061") as channel:
-                stub = webpage_pb2_grpc.ManageInstanceStub(channel)
-                response = await stub.ValidateToken(
-                    webpage_pb2.Token(token=register_token, commit=False)
-                )
-                if response.name:
-                    response = await stub.ValidateToken(
-                        webpage_pb2.Token(token=register_token, commit=True)
-                    )
-                    if response.name:
-                        _ = await register_instance(response.id, 1, message.chat)
-                    await bot.reply_to(
-                        message, "succeeded" if response.name else "Error"
-                    )
-                    return
-                await bot.reply_to(message, "It's not valid")
+        bot.message_handler(commands=["register_me"])(handlers.register_for_blog(db_initializer=get_session))
 
         # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
-        @bot.message_handler(func=lambda message: True)
-        async def echo_message(message):
-            await bot.reply_to(message, message.text)
+        bot.message_handler(func=lambda message: True)(handlers.echo_message)
 
         asyncio.run(bot.polling(request_timeout=1000))
