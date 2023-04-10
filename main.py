@@ -15,7 +15,8 @@ def configure():
 if __name__ == "__main__":
     configure()
     import handlers
-    from db.engine import get_session
+    from db import models
+    from db.engine import get_session, engine
 
     bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
 
@@ -29,3 +30,9 @@ if __name__ == "__main__":
         bot.message_handler(func=lambda message: True)(handlers.echo_message)
 
         asyncio.run(bot.polling(request_timeout=1000))
+    elif sys.argv[1] == "dbpush":
+        async def db_create_all():
+            async with engine.begin() as conn:
+                await conn.run_sync(models.Base.metadata.drop_all)
+                await conn.run_sync(models.Base.metadata.create_all)
+        asyncio.run(db_create_all())
