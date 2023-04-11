@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
-from db.operations.create import register_instance
-from grpc_gate import webpage_pb2_grpc, webpage_pb2
+from botel.db.operations.create import register_instance
+from botel.grpc_gate import webpage_pb2_grpc, webpage_pb2
 
 
 def provide_with_db(func):

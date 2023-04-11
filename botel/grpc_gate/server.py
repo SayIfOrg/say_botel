@@ -10,8 +10,8 @@ from telebot.async_telebot import AsyncTeleBot
 from . import webpage_pb2
 from . import webpage_pb2_grpc
 
-from utils.normalize import clean_html
-from db.operations import create
+from botel.utils.normalize import clean_html
+from botel.db.operations import create
 
 
 def provide_with_db(func):

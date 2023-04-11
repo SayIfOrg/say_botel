@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import telebot.types
 
-from db import models
+from botel.db import models
 
 
 async def publish_record(db: AsyncSession, page_id, message_id):

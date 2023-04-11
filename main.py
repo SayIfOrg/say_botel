@@ -5,7 +5,7 @@ import sys
 from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
 
-import grpc_gate.server
+import botel.grpc_gate.server
 
 
 def configure():
@@ -14,15 +14,15 @@ def configure():
 
 async def amain():
     configure()
-    import handlers
-    from db import models
-    from db.engine import get_session, engine
+    from botel import handlers
+    from botel.db import models
+    from botel.db.engine import get_session, engine
 
     bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
 
     if sys.argv[1] == "grpc":
         # grpc_gate.server.serve()
-        await grpc_gate.server.serve(db_initializer=get_session, bot=bot)
+        await botel.grpc_gate.server.serve(db_initializer=get_session, bot=bot)
     elif sys.argv[1] == "poll":
         bot.message_handler(commands=["register_me"])(
             handlers.register_for_blog(db_initializer=get_session)

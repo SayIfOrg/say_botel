@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from alembic import context
 
-from db import models
+from botel.db import models
 import main
 
 main.configure()
