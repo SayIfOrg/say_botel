@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "say-botel"
+version = "0.1.0"
+description = "This serviece provides the telegram related stuff/behavior to other SayIf services"
+license = "LGPL-3.0-or-later"
+repository = "https://github.com/SayIfOrg/say_botel"
+authors = ["Amir Khalife <eng.amir.bu@gmail.com>"]
+packages = [{include = "botel"},{include = "main.py"}]
+
+    [tool.poetry.dependencies]
+    python = "~3.9 || ~3.10 || ~3.11"
+    pyTelegramBotAPI = "~4.7.0"
+    aiohttp = "*"
+    alembic = "~1.8.1"
+    asyncpg = { version = "~0.26", optional = true }
+    beautifulsoup4 = "~4.11"
+    grpcio = "~1.50"
+    grpcio-tools = "~1.50"
+    sqlalchemy = "~1.4.40"
+
+    [tool.poetry.group.dev.dependencies]
+    python-dotenv = "~1.0"
+
+    [tool.poetry.extras]
+    asyncpg_adabtor = ["asyncpg"]
+    all_adabtors = ["asyncpg"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
