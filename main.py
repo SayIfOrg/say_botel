@@ -20,6 +20,11 @@ async def amain():
 
     bot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])
 
+    if proxy_url := os.environ.get("PROXY_URL"):
+        from telebot import asyncio_helper
+
+        asyncio_helper.proxy = proxy_url
+
     if sys.argv[1] == "grpc":
         # grpc_gate.server.serve()
         await botel.grpc_gate.server.serve(db_initializer=get_session, bot=bot)
