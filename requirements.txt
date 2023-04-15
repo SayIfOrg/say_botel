@@ -1,5 +1,5 @@
 pyTelegramBotAPI>=4.7.0,<4.8
-aiohttp
+aiohttp ; required by "pyTelegramBotAPI" async
 alembic>=1.8.1,<1.9
 asyncpg>=0.26,<1.0
 beautifulsoup4>=4.11,<4.12

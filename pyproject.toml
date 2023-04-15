@@ -10,7 +10,7 @@ packages = [{include = "botel"},{include = "main.py"}]
     [tool.poetry.dependencies]
     python = "~3.9 || ~3.10 || ~3.11"
     pyTelegramBotAPI = "~4.7.0"
-    aiohttp = "*"
+    aiohttp = "*" # required by "pyTelegramBotAPI" async
     alembic = "~1.8.1"
     asyncpg = { version = "~0.26", optional = true }
     beautifulsoup4 = "~4.11"
