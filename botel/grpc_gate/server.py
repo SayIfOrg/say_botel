@@ -1,6 +1,7 @@
 # from concurrent import futures
 import asyncio
 import logging
+import os
 from typing import AsyncGenerator, Callable
 
 import grpc
@@ -27,14 +28,13 @@ def provide_with_db(func):
 class PageServicer(webpage_pb2_grpc.PageServicer):
     def __init__(
         self,
-        bot: AsyncTeleBot,
         db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]],
     ):
-        self.bot = bot
         self.db_initializer = db_initializer
 
     @provide_with_db
     async def PublishSuperPage(self, request, context, db: AsyncSession):
+        telebot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])  # TODO make this dynamic
         final_coroutines = []
         message = clean_html(request.body)
         previous_published_messages = []
@@ -45,7 +45,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
         if request.edit_originals:
             final_coroutines.extend(
                 [
-                    self.bot.edit_message_text(
+                    telebot.edit_message_text(
                         text=message,
                         chat_id=request.chat_id,
                         message_id=i.message_id,
@@ -55,7 +55,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
                 ]
             )
         if not request.just_edit:
-            new_message = await self.bot.send_message(
+            new_message = await telebot.send_message(
                 chat_id=request.chat_id,
                 text=message,
                 parse_mode="html",
@@ -94,14 +94,12 @@ class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
         return webpage_pb2.Instance(id=instance.id, title="title", type="type")
 
 
-async def serve(
-    db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]], bot: AsyncTeleBot
-):
+async def serve(db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]]):
     logging.basicConfig()
     # server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     server = grpc.aio.server()
     webpage_pb2_grpc.add_PageServicer_to_server(
-        PageServicer(db_initializer=db_initializer, bot=bot), server
+        PageServicer(db_initializer=db_initializer), server
     )
     webpage_pb2_grpc.add_ManageInstanceServicer_to_server(
         ManageInstanceServicer(db_initializer=db_initializer), server

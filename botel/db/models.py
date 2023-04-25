@@ -42,3 +42,10 @@ class Chat(Base):
     id = Column(Integer, primary_key=True, autoincrement=False)
     type = Column(String)
     data = Column(String)
+
+
+class Bot(Base):
+    __tablename__ = "bot"
+    id = Column(Integer, primary_key=True)
+    api_token = Column(String)
+    project_oid = Column(String, nullable=False)
