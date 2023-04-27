@@ -18,6 +18,9 @@ from telebot.types import (
     ChatMemberUpdated,
 )
 
+from botel import dal
+from botel.dal.chat import register_channel_and_linked_group, is_commentable
+from botel.db import models
 from botel.db.operations.create import register_instance
 
 
@@ -109,7 +112,11 @@ def register_handlers(
             message_id=message.message.id,
             reply_markup=markup,
         )
-        t2 = bot.set_state(message.from_user.id, STATES.REGISTERING_CHANEL.value)
+        t2 = bot.set_state(
+            message.from_user.id,
+            STATES.REGISTERING_CHANEL.value,
+            chat_id=message.message.chat.id,
+        )
         await asyncio.gather(t1, t2)
 
     @telebot.callback_query_handler(
@@ -120,7 +127,7 @@ def register_handlers(
         """
         Unset the user's state on adding a channel and send the appropriate message
         """
-        t1 = bot.delete_state(message.from_user.id)
+        t1 = bot.delete_state(message.from_user.id, chat_id=message.message.chat.id)
 
         t2 = bot.edit_message_text(
             "Adding channel cancelled, choose one option:",
@@ -152,7 +159,7 @@ def register_handlers(
                     "you are not added the bot yet. Cancelled",
                     reply_markup=markup,
                 )
-                t2 = bot.delete_state(message.from_user.id)
+                t2 = bot.delete_state(message.from_user.id, message.chat.id)
                 await asyncio.gather(t1, t2)
                 return
             raise
@@ -170,28 +177,33 @@ def register_handlers(
         logging.info(str(update.difference))
 
     @telebot.channel_post_handler(func=lambda x: True)
-    async def channel_post(update: Message, data, bot: AsyncTeleBot):
+    @provide_with_db(db_initializer)
+    async def channel_post(db: AsyncSession, update: Message, data, bot: AsyncTeleBot):
         """
-        Prepare the channel post to be commentable
+        Add the channel post to be commentable
         """
-        logging.info("channel_post received")
+        await dal.register_commentable(db, update.message_id)
 
     # # Group
+    @telebot.message_handler(
+        func=lambda x: x.reply_to_message, chat_types=["supergroup"]
+    )
+    @provide_with_db(db_initializer)
+    async def group_replies(db:AsyncSession, update: Message, data, bot: AsyncTeleBot):
+        """
+        Handle group reply messages
+        """
+        if not await is_commentable(db=db, message_id=update.reply_to_message.id):
+            # TODO handle this more elegantly
+            return
+    #     do the commenting
+
     @telebot.message_handler(chat_types=["supergroup"])
     async def group_messages(update: Message, data, bot: AsyncTeleBot):
         """
         Handle group messages
         """
         logging.info("group_messages received")
-
-    @telebot.message_handler(
-        func=lambda x: x.reply_to_message, chat_types=["supergroup"]
-    )
-    async def group_replies(update: Message, data, bot: AsyncTeleBot):
-        """
-        Handle group reply messages
-        """
-        logging.info(str(update.difference))
 
     # # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
     @telebot.message_handler(func=lambda message: True)
