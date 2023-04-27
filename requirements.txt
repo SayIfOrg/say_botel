@@ -6,4 +6,6 @@ beautifulsoup4>=4.11,<4.12
 grpcio>=1.50,<1.51
 grpcio-tools>=1.50,<1.51
 python-dotenv>=1.0,<1.1
+#-e "git+https://github.com/SayIfOrg/say_protos.git#egg=sayif_protos&subdirectory=packages/python"
+-e ../say_protos/packages/python
 sqlalchemy>=1.4.40,<1.5

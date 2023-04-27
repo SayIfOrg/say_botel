@@ -4,6 +4,7 @@ from enum import Enum
 from typing import AsyncGenerator, Callable
 
 import grpc
+from sayif_protos import webpage_pb2_grpc, webpage_pb2
 from sqlalchemy.ext.asyncio import AsyncSession
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
@@ -18,7 +19,6 @@ from telebot.types import (
 )
 
 from botel.db.operations.create import register_instance
-from botel.grpc_gate import webpage_pb2_grpc, webpage_pb2
 
 
 def provide_with_db(db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]]):

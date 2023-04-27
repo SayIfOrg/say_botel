@@ -8,8 +8,7 @@ import grpc
 from sqlalchemy.ext.asyncio import AsyncSession
 from telebot.async_telebot import AsyncTeleBot
 
-from . import webpage_pb2
-from . import webpage_pb2_grpc
+from sayif_protos import webpage_pb2, webpage_pb2_grpc
 
 from botel.utils.normalize import clean_html
 from botel.db.operations import create

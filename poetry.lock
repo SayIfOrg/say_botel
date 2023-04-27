@@ -873,6 +873,24 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "sayif-protos"
+version = "0.1.0"
+description = ""
+category = "main"
+optional = false
+python-versions = "*"
+files = []
+develop = true
+
+[package.dependencies]
+grpcio = ">=1.50,<1.51"
+grpcio-tools = ">=1.50,<1.51"
+
+[package.source]
+type = "directory"
+url = "../say_protos/packages/python"
+
+[[package]]
 name = "setuptools"
 version = "67.6.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -1100,4 +1118,4 @@ asyncpg-adabtor = ["asyncpg"]
 [metadata]
 lock-version = "2.0"
     python-versions = "~3.9 || ~3.10 || ~3.11"
-content-hash = "1f3b95ead1efaddad59d4638f291d2396c694321c106160183ba3633cf603c8e"
+content-hash = "cd2b2b4618075fdf4171a67e347bbb2481b8bf91bc8aaf12382fbb06f77e8708"
