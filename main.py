@@ -8,6 +8,7 @@ from telebot.asyncio_filters import StateFilter
 from telebot.async_telebot import AsyncTeleBot
 
 import botel.grpc_gate.server
+from botel.grpc_gate.client import get_channel
 
 
 def configure():
@@ -19,6 +20,7 @@ async def amain():
     from botel.handlers import register_handlers
     from botel.db import models
     from botel.db.engine import get_session, engine
+    from botel.grpc_gate import server
 
     if proxy_url := os.environ.get("PROXY_URL"):
         from telebot import asyncio_helper
@@ -37,7 +39,7 @@ async def amain():
         for bot in bots:
             telebot = AsyncTeleBot(bot.api_token)
             telebot.add_custom_filter(StateFilter(telebot))
-            register_handlers(telebot, get_session)
+            register_handlers(telebot, get_session, get_channel)
             poll_task = asyncio.create_task(telebot.polling(request_timeout=1000))
             poll_tasks.append(poll_task)
         await asyncio.gather(*poll_tasks)

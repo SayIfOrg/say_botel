@@ -5,7 +5,8 @@ from enum import Enum
 from typing import AsyncGenerator, Callable, Any
 
 import grpc
-from sayif_protos import webpage_pb2_grpc, webpage_pb2
+from grpc.aio._channel import Channel
+from sayif_protos import webpage_pb2_grpc, webpage_pb2, comments_pb2, comments_pb2_grpc
 from sqlalchemy.ext.asyncio import AsyncSession
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
@@ -14,15 +15,14 @@ from telebot.types import (
     CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
     ChatMemberUpdated,
 )
 
 from botel import dal
 from botel.dal.chat import register_channel_and_linked_group, is_commentable
-from botel.db import models
 from botel.db.operations.create import register_instance
+from botel.hanlder_filters import commentable_filter
+from botel.utils.common import injector as common_injector
 
 
 def injector(*initializers: Callable[[], AsyncGenerator[Any, None]]):
@@ -73,6 +73,7 @@ MENUE_MARKUP = markup
 def register_handlers(
     telebot: AsyncTeleBot,
     db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]],
+    grpc_initializer: Callable[[], AsyncGenerator[Channel, None]],
 ):
     # Private
     @telebot.message_handler(commands=["register_me"])
@@ -145,7 +146,10 @@ def register_handlers(
         await asyncio.gather(t1, t2)
 
     @telebot.message_handler(state=STATES.REGISTERING_CHANEL.value)
-    async def add_to_a_channel(message: Message, data, bot: AsyncTeleBot):
+    @injector(db_initializer)
+    async def add_to_a_channel(
+        db: AsyncSession, message: Message, data, bot: AsyncTeleBot
+    ):
         """
         Tries to add the channel that it's message is forwarded
         """
@@ -172,7 +176,12 @@ def register_handlers(
             raise
         if bot_channel_membership:
             channel = await bot.get_chat(message.forward_from_chat.id)
-            # TODO register the channel
+            await register_channel_and_linked_group(
+                db=db, channel_id=channel.id, linked_group_id=channel.linked_chat_id
+            )
+            t1 = bot.reply_to(message, "successfully registered")
+            t2 = bot.delete_state(message.from_user.id, chat_id=message.chat.id)
+            await asyncio.gather(t1, t2)
 
     # Chat
     @telebot.my_chat_member_handler(func=lambda x: True)
@@ -189,20 +198,31 @@ def register_handlers(
         """
         Add the channel post to be commentable
         """
-        await dal.register_commentable(db, update.message_id)
+        await dal.register_commentable(
+            db, message_id=update.message_id, channel_id=update.chat.id
+        )
 
     # # Group
     @telebot.message_handler(
-        func=lambda x: x.reply_to_message, chat_types=["supergroup"]
+        func=common_injector(db_initializer)(commentable_filter),
+        chat_types=["supergroup"],
     )
-    @injector(db_initializer)
-    async def group_replies(db:AsyncSession, update: Message, data, bot: AsyncTeleBot):
+    @injector(grpc_initializer)
+    async def group_replies(
+        keeper_chan: Channel, update: Message, data, bot: AsyncTeleBot
+    ):
         """
         Handle group reply messages
         """
-        if not await is_commentable(db=db, message_id=update.reply_to_message.id):
-            # TODO handle this more elegantly
-            return
+
+        stub = comments_pb2_grpc.CommentingStub(keeper_chan)
+        posted_comment = await stub.Post(
+            comments_pb2.Comment(
+                id=0, user_id=1, content=update.text, outer_identifier=str(update.id)
+            )
+        )
+        logging.info(f"commented {posted_comment.id}")
+
     #     do the commenting
 
     @telebot.message_handler(chat_types=["supergroup"])

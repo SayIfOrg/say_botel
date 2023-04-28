@@ -6,21 +6,22 @@ from sqlalchemy import (
     BigInteger,
     String,
     func,
-    SmallInteger,
 )
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()
 
 
-class PublishHistory(Base):
-    __tablename__ = "publish_history"
+class Content(Base):
+    __tablename__ = "content"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
     page_id = Column(Integer)
-    message_id = Column(BigInteger)
+
+    @property
+    def message_id(self):
+        return self.id
 
 
 class BlogRegistered(Base):
@@ -39,13 +40,22 @@ class BlogRegistered(Base):
 class Chat(Base):
     __tablename__ = "chat"
 
-    id = Column(Integer, primary_key=True, autoincrement=False)
-    type = Column(String)
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
+    type = Column(String, nullable=False)
     data = Column(String)
+    linked_chat_id = Column(BigInteger, ForeignKey("chat.id"), unique=True)
+
+
+class Commentable(Base):
+    __tablename__ = "commentable"
+
+    id = Column(BigInteger, primary_key=True)
+    group_id = Column(BigInteger, ForeignKey("chat.id"), nullable=False)
+    content_id = Column(BigInteger, ForeignKey("content.id"), nullable=False)
 
 
 class Bot(Base):
     __tablename__ = "bot"
     id = Column(Integer, primary_key=True)
     api_token = Column(String)
-    project_oid = Column(String, nullable=False)
+    site_id = Column(Integer, nullable=False)
