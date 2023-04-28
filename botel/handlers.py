@@ -1,7 +1,8 @@
 import asyncio
 import logging
+from contextlib import AsyncExitStack
 from enum import Enum
-from typing import AsyncGenerator, Callable
+from typing import AsyncGenerator, Callable, Any
 
 import grpc
 from sayif_protos import webpage_pb2_grpc, webpage_pb2
@@ -24,14 +25,20 @@ from botel.db import models
 from botel.db.operations.create import register_instance
 
 
-def provide_with_db(db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]]):
-    """Inject AsyncSession to bot handlers"""
+def injector(*initializers: Callable[[], AsyncGenerator[Any, None]]):
+    """
+    Inject AsyncContextManagers to the bot handlers in the order provided
+    """
 
     def get_injects(func):
         # Don't use wraps, changing the func signature
         async def wrapper(message, data, bot):
-            async with db_initializer() as db:
-                return await func(db, message, data, bot)
+            async with AsyncExitStack() as stack:
+                managers = [
+                    await stack.enter_async_context(initializer())
+                    for initializer in initializers
+                ]
+                return await func(*managers, message, data, bot)
 
         return wrapper
 
@@ -69,7 +76,7 @@ def register_handlers(
 ):
     # Private
     @telebot.message_handler(commands=["register_me"])
-    @provide_with_db(db_initializer)
+    @injector(db_initializer)
     async def register_for_blog(db: AsyncSession, message, data, bot):
         register_token = message.text.split(" ")[1]
         async with grpc.aio.insecure_channel("localhost:5061") as channel:
@@ -177,7 +184,7 @@ def register_handlers(
         logging.info(str(update.difference))
 
     @telebot.channel_post_handler(func=lambda x: True)
-    @provide_with_db(db_initializer)
+    @injector(db_initializer)
     async def channel_post(db: AsyncSession, update: Message, data, bot: AsyncTeleBot):
         """
         Add the channel post to be commentable
@@ -188,7 +195,7 @@ def register_handlers(
     @telebot.message_handler(
         func=lambda x: x.reply_to_message, chat_types=["supergroup"]
     )
-    @provide_with_db(db_initializer)
+    @injector(db_initializer)
     async def group_replies(db:AsyncSession, update: Message, data, bot: AsyncTeleBot):
         """
         Handle group reply messages

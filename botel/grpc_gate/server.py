@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import os
+from contextlib import AsyncExitStack
 from typing import AsyncGenerator, Callable
 
 import grpc
@@ -14,14 +15,24 @@ from botel.utils.normalize import clean_html
 from botel.db.operations import create
 
 
-def provide_with_db(func):
-    """Inject AsyncSession to Servicer methods"""
-    # Don't use wraps, changing the func signature
-    async def wrapper(self, request, context):
-        async with self.db_initializer() as db:
-            return await func(self, request, context, db)
+def injector(*initializers: str):
+    """
+    Inject AsyncContextManagers to the Servicer methods in the provided order
+    """
 
-    return wrapper
+    def get_injects(func):
+        # Don't use wraps, changing the func signature
+        async def wrapper(self, request, context):
+            async with AsyncExitStack() as stack:
+                managers = [
+                    await stack.enter_async_context(getattr(self, initializer))
+                    for initializer in initializers
+                ]
+                return await func(self, request, context, *managers)
+
+        return wrapper
+
+    return get_injects
 
 
 class PageServicer(webpage_pb2_grpc.PageServicer):
@@ -31,7 +42,7 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
     ):
         self.db_initializer = db_initializer
 
-    @provide_with_db
+    @injector("db_initializer")
     async def PublishSuperPage(self, request, context, db: AsyncSession):
         telebot = AsyncTeleBot(os.environ["TELEGRAM_TOKEN"])  # TODO make this dynamic
         final_coroutines = []
@@ -78,7 +89,7 @@ class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
     ):
         self.db_initializer = db_initializer
 
-    @provide_with_db
+    @injector("db_initializer")
     async def InstanceList(self, request, context, db):
         instances = list(await create.get_project_instances(db, request.id))
         return webpage_pb2.Instances(
@@ -87,7 +98,7 @@ class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
             ]
         )
 
-    @provide_with_db
+    @injector("db_initializer")
     async def InstanceDetail(self, request, context, db):
         instance = await create.get_instance(db, request.id)
         return webpage_pb2.Instance(id=instance.id, title="title", type="type")
