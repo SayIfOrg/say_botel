@@ -25,7 +25,7 @@ def injector(*initializers: str):
         async def wrapper(self, request, context):
             async with AsyncExitStack() as stack:
                 managers = [
-                    await stack.enter_async_context(getattr(self, initializer))
+                    await stack.enter_async_context(getattr(self, initializer)())
                     for initializer in initializers
                 ]
                 return await func(self, request, context, *managers)
