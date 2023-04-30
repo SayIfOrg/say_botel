@@ -204,7 +204,7 @@ def register_handlers(
 
     # # Group
     @telebot.message_handler(
-        func=common_injector(db_initializer)(commentable_filter),
+        is_commentable=True,
         chat_types=["supergroup"],
     )
     @injector(grpc_initializer)

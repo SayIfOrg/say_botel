@@ -9,6 +9,7 @@ from telebot.async_telebot import AsyncTeleBot
 
 import botel.grpc_gate.server
 from botel.grpc_gate.client import get_channel
+from botel.hanlder_filters import IsCommentingFilter
 
 
 def configure():
@@ -39,6 +40,7 @@ async def amain():
         for bot in bots:
             telebot = AsyncTeleBot(bot.api_token)
             telebot.add_custom_filter(StateFilter(telebot))
+            telebot.add_custom_filter(IsCommentingFilter(db_initializer=get_session))
             register_handlers(telebot, get_session, get_channel)
             poll_task = asyncio.create_task(telebot.polling(request_timeout=1000))
             poll_tasks.append(poll_task)
