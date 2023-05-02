@@ -1,11 +1,11 @@
 pyTelegramBotAPI>=4.7.0,<4.8
-aiohttp ; required by "pyTelegramBotAPI" async
+aiohttp  # required by "pyTelegramBotAPI" async
 alembic>=1.8.1,<1.9
 asyncpg>=0.26,<1.0
 beautifulsoup4>=4.11,<4.12
 grpcio>=1.50,<1.51
 grpcio-tools>=1.50,<1.51
 python-dotenv>=1.0,<1.1
+# sayif-protos, uncomment when it's commented in requirements_local.txt
 #-e "git+https://github.com/SayIfOrg/say_protos.git#egg=sayif_protos&subdirectory=packages/python"
--e ../say_protos/packages/python
 sqlalchemy>=1.4.40,<1.5

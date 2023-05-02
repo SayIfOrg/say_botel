@@ -12,21 +12,22 @@ packages = [{include = "botel"},{include = "main.py"}]
     pyTelegramBotAPI = "~4.7.0"
     aiohttp = "*" # required by "pyTelegramBotAPI" async
     alembic = "~1.8.1"
-    asyncpg = { version = "~0.26", optional = true }
+    asyncpg = "~0.26"  # alternatively you can use psycopg3
     beautifulsoup4 = "~4.11"
     grpcio = "~1.50"
     grpcio-tools = "~1.50"
     sqlalchemy = "~1.4.40"
-#    sayif-protos = {git = "https://github.com/SayIfOrg/say_protos.git", subdirectory = "packages/python"}
-    sayif-protos = {path = "../say_protos/packages/python", develop = true}
-
+    # uncomment when it's commented in local.dependencies
+    # sayif-protos = {git = "https://github.com/SayIfOrg/say_protos.git", subdirectory = "packages/python"}
 
     [tool.poetry.group.dev.dependencies]
     python-dotenv = "~1.0"
 
+    [tool.poetry.group.local.dependencies]
+    # change the relative path to fit your usecagse
+    sayif-protos = {path = "../path-to-local-dependency/say_protos/packages/python", develop = true}
+
     [tool.poetry.extras]
-    asyncpg_adabtor = ["asyncpg"]
-    all_adabtors = ["asyncpg"]
 
 [build-system]
 requires = ["poetry-core"]

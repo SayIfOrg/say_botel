@@ -1,40 +1,40 @@
-# Use an official Python runtime based on Debian 10 "buster" as a parent image.
-FROM python:3.10.8-slim-buster
+FROM python:3.10-slim-buster
+
+# Cache potential requirements
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,target=/root/.cache/pypoetry
 
 # Set environment variables.
 # Force Python stdout and stderr streams to be unbuffered.
 # command.
 ENV PYTHONUNBUFFERED=1
 
-# Install the project requirements.
-COPY requirements.txt /
-RUN pip install -r /requirements.txt
+# Use /project folder as a directory where the source code is stored.
+WORKDIR /project
 
-# Use /app folder as a directory where the source code is stored.
-WORKDIR /app
+## Install the project requirements ##
+# local dependencies are the ones installed with the `-e` flag of pip install
+# so install them in entry point where we can bind volumes
+# using poetry
+RUN pip install poetry
+COPY pyproject.toml poetry.lock .
+RUN poetry config virtualenvs.create false && poetry install --without local --no-root
+# or using pip
+# COPY requirements.txt requirements_local.txt .
+# RUN pip install -r requirements.txt
 
 # Add user that will be used in the container.
 RUN useradd app
 
 # Set this directory to be owned by the "app" user.
-RUN chown app:app /app
+RUN chown app:app /project
 
 # Copy the source code of the project into the container.
 COPY --chown=app:app . .
 
-# Use user "app" to run the build commands below and the server itself.
-USER app
-
-# Runtime command that executes when "docker run" is called, it does the
-# following:
-#   1. Migrate the database.
-#   2. Start the application.
-# WARNING:
-#   Migrating database at the same time as starting the server IS NOT THE BEST
-#   PRACTICE. The database should be migrated manually or using the release
-#   phase facilities of your hosting platform. This is used only so the
-#   instance can be started with a simple "docker run" command.
+# if using pip instead of poetry then replace
+# `poetry install --only local` with `pip install -r requirements_local.txt`
 # grpc service
-# CMD set -xe;cd db; alembic upgrade head; cd ..; python main.py grpc
+# CMD poetry install --only local; python main.py grpc
 # telegram polling service
-CMD set -xe;cd db; alembic upgrade head; cd ..; python main.py poll
+CMD poetry install --only local && python main.py poll

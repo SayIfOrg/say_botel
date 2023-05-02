@@ -13,7 +13,7 @@ from botel.hanlder_filters import IsCommentingFilter
 
 
 def configure():
-    load_dotenv(dotenv_path=".env", override=True)
+    load_dotenv(dotenv_path=".env", override=False)
 
 
 async def amain():
