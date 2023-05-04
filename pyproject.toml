@@ -17,15 +17,16 @@ packages = [{include = "botel"},{include = "main.py"}]
     grpcio = "~1.50"
     grpcio-tools = "~1.50"
     sqlalchemy = "~1.4.40"
-    # uncomment when it's commented in local.dependencies
-    # sayif-protos = {git = "https://github.com/SayIfOrg/say_protos.git", subdirectory = "packages/python"}
+    sayif-protos = {git = "https://github.com/SayIfOrg/say_protos.git", subdirectory = "packages/python", rev = "e128dd9458dd9a", develop = true}
 
     [tool.poetry.group.dev.dependencies]
     python-dotenv = "~1.0"
 
     [tool.poetry.group.local.dependencies]
+    # local dependencies to develop in sync with dependent packages
     # change the relative path to fit your usecagse
-    sayif-protos = {path = "../path-to-local-dependency/say_protos/packages/python", develop = true}
+
+    # sayif-protos = {path = "../path-to-local-dependency/say_protos/packages/python", develop = true}
 
     [tool.poetry.extras]
 
