@@ -1,34 +1,26 @@
-# Python and others
-__pycache__
-*.pyc
-.DS_Store
-*.swp
-/venv/
-/tmp/
-/.vagrant/
-/Vagrantfile.local
-node_modules/
-/npm-debug.log
-/.idea/
-.vscode
-coverage
-.python-version
+### Docker ###
+.dockerignore
+Dockerfile
 
-# Distribution / packaging
-.Python
+### IDE ###
+# Intellij
+.idea
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
 env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+### Git ###
+.git/
+.gitignore
