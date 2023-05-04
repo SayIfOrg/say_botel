@@ -6,7 +6,7 @@ from typing import AsyncGenerator, Callable, Any
 
 import grpc
 from grpc.aio._channel import Channel
-from sayif_protos import webpage_pb2_grpc, webpage_pb2, comments_pb2, comments_pb2_grpc
+from say_protos import webpage_pb2_grpc, webpage_pb2, comments_pb2, comments_pb2_grpc
 from sqlalchemy.ext.asyncio import AsyncSession
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException

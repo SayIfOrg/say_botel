@@ -873,24 +873,24 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
-name = "sayif-protos"
+name = "say-protos"
 version = "0.1.0"
-description = ""
+description = "The shared grpc stub packages provided in different programming languages for SayIf services"
 category = "main"
 optional = false
-python-versions = "*"
+    python-versions = "~3.9 || ~3.10 || ~3.11"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
-grpcio = ">=1.50,<1.51"
-grpcio-tools = ">=1.50,<1.51"
+grpcio = "~1.50"
+grpcio-tools = "~1.50"
 
 [package.source]
 type = "git"
 url = "https://github.com/SayIfOrg/say_protos.git"
-reference = "e128dd9458dd9a"
-resolved_reference = "e128dd9458dd9a\n"
+reference = "cd7f74268a6"
+resolved_reference = "cd7f74268a615c30034bfde80c3dea3163f6d4b2"
 subdirectory = "packages/python"
 [[package]]
 name = "setuptools"
@@ -1116,4 +1116,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
     python-versions = "~3.9 || ~3.10 || ~3.11"
-content-hash = "12cd2aebb68f832e589f85024afa34f2d702574f36bd142d180ff8b53e6b261c"
+content-hash = "a255c503cc6d6df73c5499647aa253a20f657606a8f84c86bc31edbbb14bfafe"
