@@ -1,9 +1,9 @@
 import functools
 from contextlib import AsyncExitStack
-from typing import Callable, AsyncGenerator, Any
+from typing import Callable, Any, AsyncContextManager
 
 
-def injector(*initializers: tuple[Callable[[Any], AsyncGenerator[Any, None]], tuple]):
+def injector(*initializers: tuple[Callable[[Any], AsyncContextManager], tuple]):
     """
     Inject AsyncContextManagers to the func in the provided order
     """
@@ -35,7 +35,7 @@ def method_injector(*initializers: str):
                 managers = []
                 for i in initializers:
                     initializer: tuple[
-                        Callable[[Any], AsyncGenerator[Any, None]], tuple
+                        Callable[[Any], AsyncContextManager], tuple
                     ] = getattr(self, i)
                     managers.append(
                         await stack.enter_async_context(initializer[0](*initializer[1]))

@@ -2,7 +2,7 @@ import asyncio
 import logging
 from contextlib import AsyncExitStack
 from enum import Enum
-from typing import AsyncGenerator, Callable, Any
+from typing import Callable, Any, AsyncContextManager
 
 import grpc
 from grpc.aio._channel import Channel
@@ -25,7 +25,7 @@ from botel.db.engine import SessionContextManager
 from botel.db.operations.create import register_instance
 
 
-def injector(*initializers: tuple[Callable[[Any], AsyncGenerator[Any, None]], tuple]):
+def injector(*initializers: tuple[Callable[[Any], AsyncContextManager], tuple]):
     """
     Inject AsyncContextManagers to the bot handlers in the order provided
     """
@@ -75,7 +75,7 @@ def register_handlers(
     db_initializer: tuple[
         Callable[[sessionmaker], SessionContextManager], sessionmaker
     ],
-    grpc_initializer: tuple[Callable[[str], AsyncGenerator[Channel, None]], str],
+    grpc_initializer: tuple[Callable[[str], AsyncContextManager[Channel]], str],
 ):
     # Private
     @telebot.message_handler(commands=["register_me"])
