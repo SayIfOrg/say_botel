@@ -8,6 +8,7 @@ import grpc
 from grpc.aio._channel import Channel
 from say_protos import webpage_pb2_grpc, webpage_pb2, comments_pb2, comments_pb2_grpc
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_helper import ApiTelegramException
 from telebot.types import (
@@ -20,12 +21,11 @@ from telebot.types import (
 
 from botel import dal
 from botel.dal.chat import register_channel_and_linked_group, is_commentable
+from botel.db.engine import SessionContextManager
 from botel.db.operations.create import register_instance
-from botel.hanlder_filters import commentable_filter
-from botel.utils.common import injector as common_injector
 
 
-def injector(*initializers: Callable[[], AsyncGenerator[Any, None]]):
+def injector(*initializers: tuple[Callable[[Any], AsyncGenerator[Any, None]], tuple]):
     """
     Inject AsyncContextManagers to the bot handlers in the order provided
     """
@@ -35,7 +35,7 @@ def injector(*initializers: Callable[[], AsyncGenerator[Any, None]]):
         async def wrapper(message, data, bot):
             async with AsyncExitStack() as stack:
                 managers = [
-                    await stack.enter_async_context(initializer())
+                    await stack.enter_async_context(initializer[0](*initializer[1]))
                     for initializer in initializers
                 ]
                 return await func(*managers, message, data, bot)
@@ -72,12 +72,14 @@ MENUE_MARKUP = markup
 
 def register_handlers(
     telebot: AsyncTeleBot,
-    db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]],
-    grpc_initializer: Callable[[], AsyncGenerator[Channel, None]],
+    db_initializer: tuple[
+        Callable[[sessionmaker], SessionContextManager], sessionmaker
+    ],
+    grpc_initializer: tuple[Callable[[str], AsyncGenerator[Channel, None]], str],
 ):
     # Private
     @telebot.message_handler(commands=["register_me"])
-    @injector(db_initializer)
+    @injector((db_initializer[0], (db_initializer[1],)))
     async def register_for_blog(db: AsyncSession, message, data, bot):
         register_token = message.text.split(" ")[1]
         async with grpc.aio.insecure_channel("localhost:5061") as channel:
@@ -146,7 +148,7 @@ def register_handlers(
         await asyncio.gather(t1, t2)
 
     @telebot.message_handler(state=STATES.REGISTERING_CHANEL.value)
-    @injector(db_initializer)
+    @injector((db_initializer[0], (db_initializer[1],)))
     async def add_to_a_channel(
         db: AsyncSession, message: Message, data, bot: AsyncTeleBot
     ):
@@ -193,7 +195,7 @@ def register_handlers(
         logging.info(str(update.difference))
 
     @telebot.channel_post_handler(func=lambda x: True)
-    @injector(db_initializer)
+    @injector((db_initializer[0], (db_initializer[1],)))
     async def channel_post(db: AsyncSession, update: Message, data, bot: AsyncTeleBot):
         """
         Add the channel post to be commentable
@@ -207,7 +209,7 @@ def register_handlers(
         is_commentable=True,
         chat_types=["supergroup"],
     )
-    @injector(grpc_initializer)
+    @injector((grpc_initializer[0], (grpc_initializer[1],)))
     async def group_replies(
         keeper_chan: Channel, update: Message, data, bot: AsyncTeleBot
     ):

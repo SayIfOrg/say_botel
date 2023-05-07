@@ -12,13 +12,13 @@ from alembic import context
 from botel.db import models
 import main
 
-main.configure()
+app_config = main.configure()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", os.environ["DB_CONNECTION_URL"])
+config.set_main_option("sqlalchemy.url", app_config["db_connection_url"])
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

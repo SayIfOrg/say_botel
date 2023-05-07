@@ -1,10 +1,12 @@
 from typing import Callable, AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 from telebot.asyncio_filters import SimpleCustomFilter
 from telebot.types import Message
 
 from botel.dal import is_commentable
+from botel.db.engine import SessionContextManager
 from botel.utils.common import method_injector
 
 
@@ -22,9 +24,12 @@ class IsCommentingFilter(SimpleCustomFilter):
     """
 
     def __init__(
-        self, db_initializer: Callable[[], AsyncGenerator[AsyncSession, None]]
+        self,
+        db_initializer: tuple[
+            Callable[[sessionmaker], SessionContextManager], sessionmaker
+        ],
     ):
-        self.db_initializer = db_initializer
+        self.db_initializer = db_initializer[0], (db_initializer[1],)
 
     key = "is_commentable"
 
