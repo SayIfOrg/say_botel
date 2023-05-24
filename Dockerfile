@@ -9,8 +9,6 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /project
 
 ## Install the project requirements ##
-# local dependencies are the ones installed with the `-e` flag of pip install
-# so install them in entry point where we can bind volumes
 # using poetry
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install poetry
@@ -19,7 +17,7 @@ RUN poetry config virtualenvs.create false
 RUN --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install --without local --no-root
 # or using pip
-# COPY requirements.txt requirements_local.txt .
+# COPY requirements.txt .
 # RUN --mount=type=cache,target=/root/.cache/pip \
 #      pip install -r requirements.txt
 
