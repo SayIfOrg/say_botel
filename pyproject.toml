@@ -12,7 +12,7 @@ packages = [{include = "botel"},{include = "main.py"}]
     pyTelegramBotAPI = "~4.7.0"
     aiohttp = "*" # required by "pyTelegramBotAPI" async
     alembic = "~1.8.1"
-    asyncpg = "~0.26"  # alternatively you can use psycopg3
+    asyncpg = "~0.27"  # alternatively you can use psycopg3
     beautifulsoup4 = "~4.11"
     grpcio = "~1.50"
     grpcio-tools = "~1.50"
