@@ -1,6 +1,6 @@
 import functools
 from contextlib import AsyncExitStack
-from typing import Callable, Any, AsyncContextManager
+from typing import Any, AsyncContextManager, Callable
 
 
 def injector(*initializers: tuple[Callable[[Any], AsyncContextManager], tuple]):

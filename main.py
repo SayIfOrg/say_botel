@@ -4,12 +4,12 @@ import sys
 
 from dotenv import load_dotenv
 from sqlalchemy import select
-from telebot.asyncio_filters import StateFilter
 from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_filters import StateFilter
 
 import botel.grpc_gate.server
 from botel.db import models
-from botel.db.engine import get_sessionmaker, get_engine, get_session
+from botel.db.engine import get_engine, get_session, get_sessionmaker
 from botel.grpc_gate.client import get_channel
 from botel.handlers import register_handlers
 from botel.hanlder_filters import IsCommentingFilter

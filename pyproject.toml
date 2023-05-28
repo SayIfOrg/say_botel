@@ -33,3 +33,9 @@ packages = [{include = "botel"},{include = "main.py"}]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+extend_skip="alembic"
+lines_after_imports=2
+profile = "black"
+py_version=39

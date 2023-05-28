@@ -1,6 +1,6 @@
+import telebot.types
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import telebot.types
 
 from botel.db import models
 
@@ -15,9 +15,7 @@ async def publish_record(db: AsyncSession, page_id, message_id):
 
 
 async def get_page_records(db: AsyncSession, page_id):
-    result = await db.execute(
-        select(models.PublishHistory).filter_by(page_id=page_id)
-    )
+    result = await db.execute(select(models.PublishHistory).filter_by(page_id=page_id))
 
     return result.scalars()
 
@@ -36,7 +34,9 @@ async def get_instance(db: AsyncSession, id):
     return result
 
 
-async def register_instance(db: AsyncSession, project_oid, created_by_oid, chat: telebot.types.Chat):
+async def register_instance(
+    db: AsyncSession, project_oid, created_by_oid, chat: telebot.types.Chat
+):
     created_by_chat = get_or_create_chat(db, type=chat.type, data=str(chat))
     the_chat = get_or_create_chat(db, type=chat.type, data=str(chat))
     new_instance = models.BlogRegistered(
@@ -51,9 +51,7 @@ async def register_instance(db: AsyncSession, project_oid, created_by_oid, chat:
 
 
 async def get_or_create_chat(db: AsyncSession, type: str, data: str):
-    result = await db.execute(
-        select(models.Chat).filter_by(type=type, data=data)
-    )
+    result = await db.execute(select(models.Chat).filter_by(type=type, data=data))
     result = result.scalars()
     if result:
         return result[0]

@@ -6,15 +6,14 @@ from contextlib import AsyncExitStack
 from typing import AsyncGenerator, Callable
 
 import grpc
+from say_protos import webpage_pb2, webpage_pb2_grpc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from telebot.async_telebot import AsyncTeleBot
 
-from say_protos import webpage_pb2, webpage_pb2_grpc
-
 from botel.db.engine import SessionContextManager
-from botel.utils.normalize import clean_html
 from botel.db.operations import create
+from botel.utils.normalize import clean_html
 
 
 def injector(*initializers: str):
@@ -40,7 +39,9 @@ def injector(*initializers: str):
 class PageServicer(webpage_pb2_grpc.PageServicer):
     def __init__(
         self,
-        db_initializer: tuple[Callable[[sessionmaker], SessionContextManager], sessionmaker],
+        db_initializer: tuple[
+            Callable[[sessionmaker], SessionContextManager], sessionmaker
+        ],
     ):
         self.db_initializer = db_initializer
 
@@ -87,7 +88,10 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
 
 class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
     def __init__(
-        self, db_initializer: tuple[Callable[[sessionmaker], SessionContextManager], sessionmaker]
+        self,
+        db_initializer: tuple[
+            Callable[[sessionmaker], SessionContextManager], sessionmaker
+        ],
     ):
         self.db_initializer = db_initializer
 
@@ -106,7 +110,9 @@ class ManageInstanceServicer(webpage_pb2_grpc.ManageInstanceServicer):
         return webpage_pb2.Instance(id=instance.id, title="title", type="type")
 
 
-async def serve(db_initializer: tuple[Callable[[], SessionContextManager], sessionmaker]):
+async def serve(
+    db_initializer: tuple[Callable[[], SessionContextManager], sessionmaker]
+):
     logging.basicConfig()
     # server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     server = grpc.aio.server()

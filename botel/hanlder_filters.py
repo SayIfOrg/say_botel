@@ -1,4 +1,4 @@
-from typing import Callable, AsyncGenerator
+from typing import AsyncGenerator, Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
