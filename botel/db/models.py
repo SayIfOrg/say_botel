@@ -29,10 +29,18 @@ class BlogRegistered(Base):
     __mapper_args__ = {"eager_defaults": True}
 
 
+class User(Base):
+    __tablename__ = "virtual_user"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
+
+
 class Chat(Base):
     __tablename__ = "chat"
 
     id = Column(BigInteger, primary_key=True, autoincrement=False)
+    user_id = Column(Integer, ForeignKey("virtual_user.id"))
+
     type = Column(String, nullable=False)
     data = Column(String)
     linked_chat_id = Column(BigInteger, ForeignKey("chat.id"), unique=True)

@@ -2,9 +2,11 @@ import asyncio
 import logging
 from contextlib import AsyncExitStack
 from enum import Enum
-from typing import Any, AsyncContextManager, Callable
+from typing import Any, AsyncContextManager, Callable, Mapping
 
 import grpc
+from gql import Client, gql
+from gql.transport.aiohttp import AIOHTTPTransport
 from grpc.aio._channel import Channel
 from say_protos import comments_pb2, comments_pb2_grpc, webpage_pb2, webpage_pb2_grpc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,9 +22,11 @@ from telebot.types import (
 )
 
 from botel import dal
-from botel.dal.chat import is_commentable, register_channel_and_linked_group
+from botel.dal.chat import register_channel_and_linked_group
+from botel.dal.user import is_logged_in, login, logout
 from botel.db.engine import SessionContextManager
 from botel.db.operations.create import register_instance
+from botel.utils.telegram import get_start_param
 
 
 def injector(*initializers: tuple[Callable[[Any], AsyncContextManager], tuple]):
@@ -51,6 +55,7 @@ class QUERY_DATA(str, Enum):
     """
 
     REGISTER_CHANEL = "add_a_channel"
+    LOGOUT = "logout"
     CANCEL = "cancel"
 
 
@@ -66,12 +71,14 @@ markup = InlineKeyboardMarkup()
 itembtn1 = InlineKeyboardButton(
     "add a channel", callback_data=QUERY_DATA.REGISTER_CHANEL.value
 )
-markup.add(itembtn1)
+itembtn2 = InlineKeyboardButton("Logout", callback_data=QUERY_DATA.LOGOUT.value)
+markup.add(itembtn1, itembtn2, row_width=1)
 MENUE_MARKUP = markup
 
 
 def register_handlers(
     telebot: AsyncTeleBot,
+    configs: Mapping,
     db_initializer: tuple[
         Callable[[sessionmaker], SessionContextManager], sessionmaker
     ],
@@ -98,12 +105,83 @@ def register_handlers(
             await bot.reply_to(message, "It's not valid")
 
     @telebot.message_handler(commands=["m"])
-    async def menu(message: Message, data, bot: AsyncTeleBot):
+    @injector((db_initializer[0], (db_initializer[1],)))
+    async def menu(db: AsyncSession, message: Message, data, bot: AsyncTeleBot):
         """
         Send the menu inline keyboard
         """
+        if not await is_logged_in(db, message.chat.id):
+            markup = InlineKeyboardMarkup()
+            itembtn1 = InlineKeyboardButton(
+                "Login",
+                url=f"http://{configs['wagtail_url']}/admin/linking/telebot/{bot.user.username}/",
+            )
+            markup.add(itembtn1)
+            await bot.send_message(
+                message.chat.id,
+                "Do you have an account that we can recover you data from:",
+                reply_markup=markup,
+            )
+            return
         await bot.send_message(
             message.chat.id, "Choose one option:", reply_markup=MENUE_MARKUP
+        )
+
+    @telebot.message_handler(
+        commands=["start"],
+        chat_types=["private"],
+        func=lambda message: get_start_param(message).split("_")[0] == "linkUserPK",
+    )
+    @injector((db_initializer[0], (db_initializer[1],)))
+    async def link_to_wagtail(
+        db: AsyncSession, message: Message, data, bot: AsyncTeleBot
+    ):
+        fragment = get_start_param(message).split("_")[1]
+        transport = AIOHTTPTransport(url=f"http://{configs['wagtail_url']}/graphql/")
+        async with Client(
+            transport=transport,
+            fetch_schema_from_transport=True,
+        ) as session:
+            query = gql(
+                """
+                query ($theUuid: String!) {
+                  retrieveUserByPrivateFragment(theUuid: $theUuid)
+                }
+                """
+            )
+
+            result = await session.execute(query, variable_values={"theUuid": fragment})
+        _ = await login(
+            db=db,
+            chat_id=message.chat.id,
+            user_id=result["retrieveUserByPrivateFragment"],
+        )
+        await bot.send_message(
+            message.chat.id,
+            "Your SayIf and Telegram accounts are now linked",
+            reply_markup=MENUE_MARKUP,
+        )
+
+    @telebot.callback_query_handler(
+        # chat_types=["private"],
+        func=lambda x: x.data
+        == QUERY_DATA.LOGOUT.value
+    )
+    @injector((db_initializer[0], (db_initializer[1],)))
+    async def unlink_from_wagtail(
+        db: AsyncSession, message: CallbackQuery, data, bot: AsyncTeleBot
+    ):
+        _ = await logout(db=db, chat_id=message.message.chat.id)
+        markup = InlineKeyboardMarkup()
+        itembtn1 = InlineKeyboardButton(
+            "Login",
+            url=f"http://{configs['wagtail_url']}/admin/linking/telebot/{bot.user.username}/",
+        )
+        markup.add(itembtn1)
+        await bot.send_message(
+            message.message.chat.id,
+            "You are not logged in:",
+            reply_markup=markup,
         )
 
     @telebot.callback_query_handler(

@@ -18,6 +18,7 @@ packages = [{include = "botel"},{include = "main.py"}]
     grpcio-tools = "~1.50"
     sqlalchemy = "~1.4.40"
     say-protos = {git = "https://github.com/SayIfOrg/say_protos.git", subdirectory = "packages/python", rev = "cd7f74268a6"}
+    gql = "~3.4.1"
 
     [tool.poetry.group.dev.dependencies]
     python-dotenv = "~1.0"

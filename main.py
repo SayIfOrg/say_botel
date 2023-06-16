@@ -21,6 +21,7 @@ def configure():
         "proxy_url": os.environ.get("PROXY_URL"),
         "db_connection_url": os.environ["DB_CONNECTION_URL"],
         "keeper_grpc_url": os.environ["KEEPER_GRPC_URL"],
+        "wagtail_url": os.environ["WAGTAIL_URL"],
     }
     return config
 
@@ -53,6 +54,7 @@ async def amain():
             )
             register_handlers(
                 telebot,
+                config,
                 (get_session, sessionmaker),
                 (get_channel, config["keeper_grpc_url"]),
             )
