@@ -23,7 +23,7 @@ from telebot.types import (
 
 from botel import dal
 from botel.dal.chat import register_channel_and_linked_group
-from botel.dal.user import is_logged_in, login, logout
+from botel.dal.user import is_logged_in, is_temped_in, login, logout, temp_in
 from botel.db.engine import SessionContextManager
 from botel.db.operations.create import register_instance
 from botel.utils.telegram import get_start_param
@@ -145,7 +145,9 @@ def register_handlers(
             query = gql(
                 """
                 query ($theUuid: String!) {
-                  retrieveUserByPrivateFragment(theUuid: $theUuid)
+                  retrieveUserByPrivateFragment(theUuid: $theUuid) {
+                    id
+                  }
                 }
                 """
             )
@@ -154,7 +156,7 @@ def register_handlers(
         _ = await login(
             db=db,
             chat_id=message.chat.id,
-            user_id=result["retrieveUserByPrivateFragment"],
+            user_id=int(result["retrieveUserByPrivateFragment"]["id"]),
         )
         await bot.send_message(
             message.chat.id,
@@ -287,23 +289,40 @@ def register_handlers(
         is_commentable=True,
         chat_types=["supergroup"],
     )
-    @injector((grpc_initializer[0], (grpc_initializer[1],)))
+    @injector(
+        (db_initializer[0], (db_initializer[1],)),
+        (grpc_initializer[0], (grpc_initializer[1],)),
+    )
     async def group_replies(
-        keeper_chan: Channel, update: Message, data, bot: AsyncTeleBot
+        db: AsyncSession, keeper_chan: Channel, update: Message, data, bot: AsyncTeleBot
     ):
         """
         Handle group reply messages
         """
+        u1 = await is_logged_in(db, update.from_user.id)
+        u2 = await is_temped_in(db, update.from_user.id)
+        if not u1 and not u2:
+            chat, _ = await temp_in(db, configs=configs, t_user=update.from_user)
+        elif u1:
+            chat = u1
+        else:
+            chat = u2
 
         stub = comments_pb2_grpc.CommentingStub(keeper_chan)
+        reply_to_id = (
+            update.reply_to_message.id
+            if not update.reply_to_message.forward_from_message_id
+            else 0
+        )
         posted_comment = await stub.Post(
             comments_pb2.Comment(
-                id=0, user_id=1, content=update.text, outer_identifier=str(update.id)
+                id=update.id,
+                reply_to_id=reply_to_id,
+                user_id=chat.user_id,
+                content=update.text,
+                outer_identifier=str(update.id),
             )
         )
-        logging.info(f"commented {posted_comment.id}")
-
-    #     do the commenting
 
     @telebot.message_handler(chat_types=["supergroup"])
     async def group_messages(update: Message, data, bot: AsyncTeleBot):
