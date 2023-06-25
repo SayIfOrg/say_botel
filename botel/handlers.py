@@ -302,7 +302,16 @@ def register_handlers(
         u1 = await is_logged_in(db, update.from_user.id)
         u2 = await is_temped_in(db, update.from_user.id)
         if not u1 and not u2:
-            chat, _ = await temp_in(db, configs=configs, t_user=update.from_user)
+            t_profile = await bot.get_user_profile_photos(update.from_user.id, limit=1)
+            if t_profile.photos:
+                main_profile_file_id = t_profile.photos[0][-1].file_id
+                t_profile_url = await bot.get_file_url(main_profile_file_id)
+            chat, _ = await temp_in(
+                db,
+                configs=configs,
+                t_user=update.from_user,
+                t_profile_url=t_profile_url,
+            )
         elif u1:
             chat = u1
         else:

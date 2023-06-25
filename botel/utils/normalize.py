@@ -1,3 +1,5 @@
+import base64
+
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet, Tag
 
@@ -75,3 +77,11 @@ def clean_html(html: str) -> str:
         for action in actions:
             action(elements)
     return str(soup)
+
+
+def getNodeID(relayID: str):
+    """
+    returns the correct id of the base64 relay id
+    that is like base64of(onjType + : + id)
+    """
+    return base64.b64decode(relayID).decode().split(":")[1]

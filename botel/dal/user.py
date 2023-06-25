@@ -1,5 +1,6 @@
-from typing import Mapping
+from typing import Mapping, Optional
 
+import aiohttp
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from sqlalchemy import delete, select
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from telebot.types import Chat, User
 
 from botel.db import models
+from botel.utils.normalize import getNodeID
 
 
 async def is_logged_in(db: AsyncSession, chat_id):
@@ -48,7 +50,7 @@ async def logout(db: AsyncSession, chat_id):
 
 
 async def temp_in(
-    db: AsyncSession, configs: Mapping, t_user: User
+    db: AsyncSession, configs: Mapping, t_user: User, t_profile_url: Optional[str]
 ) -> (models.Chat, bool):
     transport = AIOHTTPTransport(url=f"http://{configs['wagtail_url']}/graphql/")
     async with Client(
@@ -79,8 +81,23 @@ async def temp_in(
                 "lastName": t_user.last_name or "",
             },
         )
+        user_id = getNodeID(result["newTempUser"]["user"]["id"])
+    if t_profile_url:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(t_profile_url, proxy=configs["proxy_url"]) as resp:
+                t_profile = await resp.content.read()
+
+            form_data = aiohttp.FormData()
+            form_data.add_field("avatar", t_profile)
+            async with session.post(
+                f"http://{configs['wagtail_url']}/api/accounting/{user_id}/avatar/",
+                data=form_data,
+                proxy=configs["proxy_url"],
+            ) as resp:
+                print(resp.status)
+
     user_created = False
-    user_id = int(result["newTempUser"]["user"]["id"])
+    user_id = int(user_id)
     user = await db.execute(select(models.User).where(models.User.id == user_id))
     user = user.first()
     if not user:
