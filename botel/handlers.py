@@ -319,17 +319,16 @@ def register_handlers(
 
         stub = comments_pb2_grpc.CommentingStub(keeper_chan)
         reply_to_id = (
-            update.reply_to_message.id
+            f"{update.reply_to_message.id}-{update.reply_to_message.chat.id}"
             if not update.reply_to_message.forward_from_message_id
             else 0
         )
         posted_comment = await stub.Post(
             comments_pb2.Comment(
-                id=update.id,
                 reply_to_id=reply_to_id,
                 user_id=chat.user_id,
                 content=update.text,
-                outer_identifier=str(update.id),
+                outer_identifier=f"{update.id}/{update.chat.id}",
             )
         )
 
