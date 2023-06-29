@@ -925,8 +925,8 @@ grpcio-tools = "~1.50"
 [package.source]
 type = "git"
 url = "https://github.com/SayIfOrg/say_protos.git"
-reference = "cd7f74268a6"
-resolved_reference = "cd7f74268a615c30034bfde80c3dea3163f6d4b2"
+reference = "56a4174e39bfe"
+resolved_reference = "56a4174e39bfe768e0d2275d410c5dce2f0ad938"
 subdirectory = "packages/python"
 
 [[package]]
@@ -1148,4 +1148,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.9 || ~3.10 || ~3.11"
-content-hash = "5315b3287ba106f5f5e5ec8dfb90287ec76c4fa1b3316645add129f45f7094b9"
+content-hash = "7f95ac1371d4323256bb87287e75e1af8ac2c8b6bbab308e107ba1be9049ebfe"

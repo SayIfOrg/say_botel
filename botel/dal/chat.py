@@ -1,3 +1,5 @@
+from grpc._cython.cygrpc import Channel
+from say_protos import comments_pb2, comments_pb2_grpc
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,3 +52,13 @@ async def is_commentable(db: AsyncSession, group_id: int, message_id: int) -> bo
         )
     )
     return bool(result.first())
+
+
+async def is_replyable(keeper_chan: Channel, chat_id, message_id):
+    stub = comments_pb2_grpc.CommentingStub(keeper_chan)
+    posted_comment = await stub.Get(
+        comments_pb2.GetParams(
+            outer_identifier=f"{message_id}/{chat_id}",
+        )
+    )
+    return bool(posted_comment.id)

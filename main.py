@@ -50,7 +50,10 @@ async def amain():
             telebot = AsyncTeleBot(bot.api_token)
             telebot.add_custom_filter(StateFilter(telebot))
             telebot.add_custom_filter(
-                IsCommentingFilter(db_initializer=(get_session, sessionmaker))
+                IsCommentingFilter(
+                    db_initializer=(get_session, sessionmaker),
+                    grpc_initializer=(get_channel, config["keeper_grpc_url"]),
+                )
             )
             register_handlers(
                 telebot,
