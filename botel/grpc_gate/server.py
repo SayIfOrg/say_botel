@@ -72,9 +72,11 @@ class PageServicer(webpage_pb2_grpc.PageServicer):
                 chat_id=request.chat_id,
                 text=message,
                 parse_mode="html",
-                reply_to_message_id=previous_published_messages[0].message_id
-                if request.reference_original and previous_published_messages
-                else None,
+                reply_to_message_id=(
+                    previous_published_messages[0].message_id
+                    if request.reference_original and previous_published_messages
+                    else None
+                ),
             )
             final_coroutines.append(
                 create.publish_record(db, page_id=request.id, message_id=new_message.id)
