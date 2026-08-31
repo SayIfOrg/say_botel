@@ -142,15 +142,13 @@ def register_handlers(
             transport=transport,
             fetch_schema_from_transport=True,
         ) as session:
-            query = gql(
-                """
+            query = gql("""
                 query ($theUuid: String!) {
                   retrieveUserByPrivateFragment(theUuid: $theUuid) {
                     id
                   }
                 }
-                """
-            )
+                """)
 
             result = await session.execute(query, variable_values={"theUuid": fragment})
         _ = await login(
