@@ -34,9 +34,9 @@ def method_injector(*initializers: str):
             async with AsyncExitStack() as stack:
                 managers = []
                 for i in initializers:
-                    initializer: tuple[
-                        Callable[[Any], AsyncContextManager], tuple
-                    ] = getattr(self, i)
+                    initializer: tuple[Callable[[Any], AsyncContextManager], tuple] = (
+                        getattr(self, i)
+                    )
                     managers.append(
                         await stack.enter_async_context(initializer[0](*initializer[1]))
                     )
