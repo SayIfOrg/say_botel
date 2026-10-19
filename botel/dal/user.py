@@ -57,8 +57,7 @@ async def temp_in(
         transport=transport,
         fetch_schema_from_transport=True,
     ) as session:
-        query = gql(
-            """
+        query = gql("""
             mutation ($preferredUsername: String!, $firstName: String!, $lastName: String!) {
               newTempUser(
                 preferredUsername: $preferredUsername
@@ -70,8 +69,7 @@ async def temp_in(
                 }
               }
             }
-            """
-        )
+            """)
 
         result = await session.execute(
             query,
