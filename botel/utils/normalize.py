@@ -48,7 +48,7 @@ def list_tag():
                 if child.name == "li":
                     count += 1
                     child.insert_before(
-                        "\N{bullet}" if element.name == "ul" else f"{count}) "
+                        "\N{BULLET}" if element.name == "ul" else f"{count}) "
                     )
                     child.insert_after("\n")
                     child.unwrap()
